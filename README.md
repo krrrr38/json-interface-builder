@@ -1,5 +1,7 @@
 ### JSON Interface Builder
 
+Generate Interfaces of JSON for TypeScript, Scala and so on.
+
 [JSON Interface Builder](http://krrrr38.github.io/json-interface-builder/)
 
 1. Write/Copy JSON Data

@@ -11,6 +11,7 @@ interface TopScope extends ng.IScope {
   json: string;
   step: number;
   result: string;
+  language: string;
   components: core.SearchableObject[];
   targetComponentIndex: number;
   isValidJson: (string) => boolean;
@@ -23,6 +24,7 @@ class TopCtrl {
     $scope.step = Step.Start;
     $scope.components = [];
     $scope.targetComponentIndex = 0;
+    $scope.language = "ts";
 
     $scope.isValidJson = (json: string) => {
       if (json) {
@@ -49,6 +51,12 @@ class TopCtrl {
         this.showResult();
       }
     }
+
+    $scope.$watch('language', (newLang) => {
+      if($scope.step === Step.Result) {
+        this.loadResult(newLang);
+      }
+    });
   }
 
   private build = (json: string) => {
@@ -61,9 +69,17 @@ class TopCtrl {
 
   private showResult = () => {
     this.$scope.step = Step.Result;
+    this.loadResult(this.$scope.language);
+  }
 
+  private loadResult = (lang: string) => {
     this.$scope.result = "";
-    var exp = new exporter.TypeScriptExporter();
+    var exp;
+    if (lang === "scala") {
+      exp = new exporter.ScalaExporter();
+    } else {
+      exp = new exporter.TypeScriptExporter();
+    }
     var components = this.$scope.components;
     for(var i = 0; i < components.length; i++) {
       this.$scope.result += exp.run(components[i]) + "\n";

@@ -21,8 +21,17 @@ var TopCtrl = (function () {
         };
         this.showResult = function () {
             _this.$scope.step = 2 /* Result */;
+            _this.loadResult(_this.$scope.language);
+        };
+        this.loadResult = function (lang) {
             _this.$scope.result = "";
-            var exp = new exporter.TypeScriptExporter();
+            var exp;
+            if (lang === "scala") {
+                exp = new exporter.ScalaExporter();
+            }
+            else {
+                exp = new exporter.TypeScriptExporter();
+            }
             var components = _this.$scope.components;
             for (var i = 0; i < components.length; i++) {
                 _this.$scope.result += exp.run(components[i]) + "\n";
@@ -31,6 +40,7 @@ var TopCtrl = (function () {
         $scope.step = 0 /* Start */;
         $scope.components = [];
         $scope.targetComponentIndex = 0;
+        $scope.language = "ts";
         $scope.isValidJson = function (json) {
             if (json) {
                 try {
@@ -56,6 +66,11 @@ var TopCtrl = (function () {
                 _this.showResult();
             }
         };
+        $scope.$watch('language', function (newLang) {
+            if ($scope.step === 2 /* Result */) {
+                _this.loadResult(newLang);
+            }
+        });
     }
     return TopCtrl;
 })();

@@ -9,7 +9,7 @@
     <header>
       <h1>JSON Interface Builder</h1>
       <div>
-        Generate Interfaces of JSON for TypeScript and so on.
+        Generate Interfaces of JSON for TypeScript, Scala and so on.
       </div>
     </header>
     <div class="pure-g" ng-controller="TopCtrl">
@@ -64,8 +64,13 @@
 
           <div class="result pure-form" ng-show="step == 2">
             <div>
-              <p>Generate TypeScript Interfaces for json.</p>
-              <!-- <button class="btn btn-default ng-isolate-scope" clip-copy="result" clip-click-fallback="fallback(copy)">Copy</button> -->
+              <p>Generate Interfaces for json.</p>
+              <label class="pure-radio">
+                <input type="radio" ng-model="language" value="ts">TypeScript</input>
+              </label>
+              <label class="pure-radio">
+                <input type="radio" ng-model="language" value="scala">Scala</input>
+              </label>
             </div>
             <textarea ng-model="result" class="result-preview">
           </div>
