@@ -1,0 +1,21 @@
+{
+  "name": "json-interface-builder",
+  "version": "0.0.0",
+  "authors": [
+    "krrrr38 <k.kaizu38@gmail.com>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.3.1",
+    "zeroclipboard": "~2.1.6",
+    "ng-clip": "~0.2.4"
+  }
+}

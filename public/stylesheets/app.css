@@ -1,0 +1,56 @@
+header {
+    margin: 20px;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+}
+
+textarea {
+    color: black !important;
+}
+
+.container {
+    margin: 20px;
+}
+
+#json-container {
+    width: 100%;
+    height: 70%;
+}
+
+.start-submit {
+    text-align: center;
+}
+
+.start-button {
+    width: 120px;
+}
+
+ul.build-list-container {
+    padding: 0;
+}
+
+li.build-container {
+    display: block;
+}
+
+.build-submit-container {
+    margin: 0 5px;
+}
+
+.build-preview-container {
+    margin: 10px 0;
+}
+
+textarea.build-preview {
+    width: 100%;
+    height: 60%;
+}
+
+textarea.result-preview {
+    margin: 5px 0;
+    width: 100%;
+    height: 70%;
+}

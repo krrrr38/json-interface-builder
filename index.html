@@ -1,0 +1,77 @@
+<html ng-app="jibApp">
+  <head>
+    <title>JSON Interface Builder</title>
+    <script src="./public/javascripts/minified/json-interface-builder.js"></script>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+    <link rel="stylesheet" href="./public/stylesheets/app.css">
+  </head>
+  <body>
+    <header>
+      <h1>JSON Interface Builder</h1>
+      <div>
+        Generate Interfaces of JSON for TypeScript and so on.
+      </div>
+    </header>
+    <div class="pure-g" ng-controller="TopCtrl">
+      <div class="pure-u-1-2">
+        <div class="container pure-form">
+          <h4>Whole JSON</h4>
+          <textarea ng-disabled="step != 0"
+                    ng-model="json"
+                    autofocus="autofocus"
+                    placeholder='{"foo": {"bar": 3}, "hoge": "fuga"}'
+                    id="json-container"></textarea>
+        </div>
+      </div>
+      <div class="pure-u-1-2">
+        <div class="container">
+
+          <div class="start" ng-show="step == 0">
+            <div class="description">
+              <ol>
+                <li>Write/Paste Valid JSON in a Left Window</li>
+                <li>Click START button</li>
+                <li>Write each Component Json Names</li>
+                <li>Generate Interfaces for each JSON</li>
+              </ol>
+            </div>
+            <div class="start-submit">
+              <input type="button"
+                     value="START"
+                     class="pure-button pure-button-primary start-button"
+                     ng-click="startBuilding()"
+                     ng-disabled="!isValidJson(json)"
+                     ></input>
+            </div>
+            <div>
+              <h4>HOWTO</h4>
+              <img src="./images/howto.gif" width="500px">
+            </div>
+          </div>
+
+          <div class="builder" ng-show="step == 1">
+            <div>
+              Write an Interface Name for Following JSON Component.
+            </div>
+            <ul class="build-list-container">
+              <li ng-repeat="target in components" ng-show="targetComponentIndex == {{$index}}" class="build-container">
+                <div component-builder
+                     component="target"
+                     submit="nextComponent(name)"></div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="result pure-form" ng-show="step == 2">
+            <div>
+              <p>Generate TypeScript Interfaces for json.</p>
+              <!-- <button class="btn btn-default ng-isolate-scope" clip-copy="result" clip-click-fallback="fallback(copy)">Copy</button> -->
+            </div>
+            <textarea ng-model="result" class="result-preview">
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
