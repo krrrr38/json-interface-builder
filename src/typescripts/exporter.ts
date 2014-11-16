@@ -7,15 +7,12 @@ module exporter {
     constructor(private indent: string = "  ") {}
 
     run(component: core.SearchableObject): string {
-      var pre = "interface " + component.name + " {\n  "
-      var post = "\n}\n"
+      var res = "interface " + component.name + " {\n";
       var trees = component.getTrees();
-      var treesArr: string[] = [];
       for(var key in trees) {
-        treesArr.push(key + ": " + this.toTSTreeStr(trees[key]))
+        res += this.indent + key + ": " + this.toTSTreeStr(trees[key]) + ";\n";
       }
-      var separator = ",\n" + this.indent;
-      return pre + util.ArrayUtil.mkString(treesArr, separator) + post;
+      return res + "}\n";
     }
 
     private toTSTreeStr(tree: core.Tree): string {

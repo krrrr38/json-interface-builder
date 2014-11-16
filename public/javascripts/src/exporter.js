@@ -8,15 +8,12 @@ var exporter;
             this.indent = indent;
         }
         TypeScriptExporter.prototype.run = function (component) {
-            var pre = "interface " + component.name + " {\n  ";
-            var post = "\n}\n";
+            var res = "interface " + component.name + " {\n";
             var trees = component.getTrees();
-            var treesArr = [];
             for (var key in trees) {
-                treesArr.push(key + ": " + this.toTSTreeStr(trees[key]));
+                res += this.indent + key + ": " + this.toTSTreeStr(trees[key]) + ";\n";
             }
-            var separator = ",\n" + this.indent;
-            return pre + util.ArrayUtil.mkString(treesArr, separator) + post;
+            return res + "}\n";
         };
         TypeScriptExporter.prototype.toTSTreeStr = function (tree) {
             var type = tree.name;
