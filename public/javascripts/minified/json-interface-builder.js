@@ -11027,11 +11027,7 @@ var TopCtrl = function() {
         var _this = this;
         this.$scope = $scope;
         this.build = function(json) {
-            var callback = function(obj) {
-                _this.$scope.components.push(obj);
-            };
-            var root = new core.SearchableObject("Root", false, JSON.parse(json), callback);
-            _this.$scope.components.push(root);
+            _this.$scope.components = core.JIBExplorer.findObjects(JSON.parse(json));
         };
         this.showResult = function() {
             _this.$scope.step = 2;
@@ -11113,54 +11109,48 @@ angular.module("jibApp", []).controller("TopCtrl", [ "$scope", TopCtrl ]).direct
 var core;
 
 (function(core) {
-    var ConstValue = function() {
-        function ConstValue(value, isArray) {
-            this.value = value;
-            this.isArray = isArray;
-            if (angular.isUndefined(value)) {
-                this.name = "any";
-            } else {
-                this.name = typeof value;
-            }
-        }
-        return ConstValue;
-    }();
-    core.ConstValue = ConstValue;
-    var SearchableObject = function() {
-        function SearchableObject(name, isArray, obj, callback) {
-            this.obj = obj;
-            this.trees = {};
-            this.name = name;
-            this.isArray = isArray;
-            for (var key in this.obj) {
-                var target = this.obj[key];
-                if (angular.isArray(target)) {
-                    var head = target[0];
-                    if (head && angular.isObject(head)) {
-                        var searchableObj = new SearchableObject(util.StringUtil.camenize(key, true), true, head, callback);
-                        this.trees[key] = searchableObj;
-                        callback(searchableObj);
-                    } else {
-                        this.trees[key] = new ConstValue(head, true);
-                    }
-                } else if (angular.isObject(target)) {
-                    var searchableObj = new SearchableObject(util.StringUtil.camenize(key, false), false, this.obj[key], callback);
-                    this.trees[key] = searchableObj;
-                    callback(searchableObj);
+    var JIBExplorer = function() {
+        function JIBExplorer() {}
+        JIBExplorer.findObjects = function(obj) {
+            var objects = [];
+            var callback = function(jibobj) {
+                objects.push(jibobj);
+            };
+            JIBExplorer.dig("Root", obj, callback);
+            return objects;
+        };
+        JIBExplorer.dig = function(name, obj, callback) {
+            var values = {};
+            for (var key in obj) {
+                var value = obj[key];
+                if (angular.isArray(value)) {
+                    var head = value[0];
+                    var singleKey = util.StringUtil.singular(key);
+                    values[key] = new types.JIBArray(JIBExplorer.detectSingleObject(singleKey, head, callback));
                 } else {
-                    this.trees[key] = new ConstValue(this.obj[key], false);
+                    values[key] = JIBExplorer.detectSingleObject(key, value, callback);
                 }
             }
-        }
-        SearchableObject.prototype.getPrettyJsonString = function() {
-            return util.JsonUtil.formatObject(this.obj);
+            var jibobj = new types.JIBObject(util.StringUtil.camenize(name), values);
+            callback(jibobj);
+            return jibobj;
         };
-        SearchableObject.prototype.getTrees = function() {
-            return this.trees;
+        JIBExplorer.detectSingleObject = function(key, value, callback) {
+            if (angular.isObject(value)) {
+                return JIBExplorer.dig(key, value, callback);
+            } else if (angular.isString(value)) {
+                return new types.JIBString(value);
+            } else if (angular.isNumber(value)) {
+                return new types.JIBNumber(value);
+            } else if (typeof value === "boolean") {
+                return new types.JIBBoolean(value);
+            } else {
+                return new types.JIBAnything(value);
+            }
         };
-        return SearchableObject;
+        return JIBExplorer;
     }();
-    core.SearchableObject = SearchableObject;
+    core.JIBExplorer = JIBExplorer;
 })(core || (core = {}));
 
 var exporter;
@@ -11175,18 +11165,32 @@ var exporter;
         }
         TypeScriptExporter.prototype.run = function(component) {
             var res = "interface " + component.name + " {\n";
-            var trees = component.getTrees();
-            for (var key in trees) {
-                res += this.indent + key + ": " + this.toTSTreeStr(trees[key]) + ";\n";
+            var values = component.value;
+            for (var key in values) {
+                res += this.indent + key + ": " + this.toTSType(values[key]) + ";\n";
             }
             return res + "}\n";
         };
-        TypeScriptExporter.prototype.toTSTreeStr = function(tree) {
-            var type = tree.name;
-            if (tree.isArray) {
-                type += "[]";
+        TypeScriptExporter.prototype.toTSType = function(value) {
+            switch (value.type) {
+              case 0:
+                return this.toTSType(value.value) + "[]";
+
+              case 1:
+                return value.name;
+
+              case 2:
+                return "string";
+
+              case 3:
+                return "number";
+
+              case 4:
+                return "boolean";
+
+              default:
+                return "any";
             }
-            return type;
         };
         return TypeScriptExporter;
     }();
@@ -11195,42 +11199,128 @@ var exporter;
         function ScalaExporter() {}
         ScalaExporter.prototype.run = function(component) {
             var pre = "case class " + component.name + "(";
-            var trees = component.getTrees();
-            var treesArr = [];
-            for (var key in trees) {
-                treesArr.push(key + ": " + this.toScalaTreeType(trees[key]));
+            var values = component.value;
+            var args = [];
+            for (var key in values) {
+                args.push(key + ": " + this.toScalaType(values[key]));
             }
-            return pre + util.ArrayUtil.mkString(treesArr, ", ") + ")";
+            return pre + util.ArrayUtil.mkString(args, ", ") + ")";
         };
-        ScalaExporter.prototype.toScalaTreeType = function(tree) {
-            if (tree.isArray) {
-                return "Seq[" + this.toScalaType(tree.name) + "]";
-            } else {
-                return this.toScalaType(tree.name);
-            }
-        };
-        ScalaExporter.prototype.toScalaType = function(name) {
-            switch (name) {
-              case "string":
+        ScalaExporter.prototype.toScalaType = function(value) {
+            switch (value.type) {
+              case 0:
+                return "Seq[" + this.toScalaType(value.value) + "]";
+
+              case 1:
+                return value.name;
+
+              case 2:
                 return "String";
 
-              case "number":
+              case 3:
                 return "Int";
 
-              case "boolean":
+              case 4:
                 return "Boolean";
 
-              case "any":
-                return "Any";
-
               default:
-                return name;
+                return "Any";
             }
         };
         return ScalaExporter;
     }();
     exporter.ScalaExporter = ScalaExporter;
 })(exporter || (exporter = {}));
+
+var types;
+
+(function(types) {
+    (function(Types) {
+        Types[Types["JIBArray"] = 0] = "JIBArray";
+        Types[Types["JIBObject"] = 1] = "JIBObject";
+        Types[Types["JIBString"] = 2] = "JIBString";
+        Types[Types["JIBNumber"] = 3] = "JIBNumber";
+        Types[Types["JIBBoolean"] = 4] = "JIBBoolean";
+        Types[Types["JIBAnything"] = 5] = "JIBAnything";
+    })(types.Types || (types.Types = {}));
+    var Types = types.Types;
+    var JIBObject = function() {
+        function JIBObject(name, value) {
+            this.name = name;
+            this.type = 1;
+            this.value = value;
+        }
+        JIBObject.prototype.getPrettyJsonString = function() {
+            var jsonValues = [];
+            for (var key in this.value) {
+                var obj = this.value[key];
+                if (obj.type === 1) {
+                    jsonValues.push('"' + key + '"' + ":" + '"<' + obj.name + '>"');
+                } else {
+                    jsonValues.push('"' + key + '"' + ":" + obj.getPrettyJsonString());
+                }
+            }
+            return util.JsonUtil.formatter("{" + util.ArrayUtil.mkString(jsonValues, ",") + "}");
+        };
+        return JIBObject;
+    }();
+    types.JIBObject = JIBObject;
+    var JIBArray = function() {
+        function JIBArray(value) {
+            this.type = 0;
+            this.value = value;
+        }
+        JIBArray.prototype.getPrettyJsonString = function() {
+            return util.JsonUtil.formatter("[" + this.value.getPrettyJsonString() + "]");
+        };
+        return JIBArray;
+    }();
+    types.JIBArray = JIBArray;
+    var JIBString = function() {
+        function JIBString(value) {
+            this.type = 2;
+            this.value = value;
+        }
+        JIBString.prototype.getPrettyJsonString = function() {
+            return '"' + this.value + '"';
+        };
+        return JIBString;
+    }();
+    types.JIBString = JIBString;
+    var JIBNumber = function() {
+        function JIBNumber(value) {
+            this.type = 3;
+            this.value = value;
+        }
+        JIBNumber.prototype.getPrettyJsonString = function() {
+            return this.value.toString();
+        };
+        return JIBNumber;
+    }();
+    types.JIBNumber = JIBNumber;
+    var JIBBoolean = function() {
+        function JIBBoolean(value) {
+            this.type = 4;
+            this.value = value;
+        }
+        JIBBoolean.prototype.getPrettyJsonString = function() {
+            return this.value.toString();
+        };
+        return JIBBoolean;
+    }();
+    types.JIBBoolean = JIBBoolean;
+    var JIBAnything = function() {
+        function JIBAnything(value) {
+            this.type = 5;
+            this.value = value;
+        }
+        JIBAnything.prototype.getPrettyJsonString = function() {
+            return "";
+        };
+        return JIBAnything;
+    }();
+    types.JIBAnything = JIBAnything;
+})(types || (types = {}));
 
 var util;
 
@@ -11249,14 +11339,14 @@ var util;
     util.JsonUtil = JsonUtil;
     var StringUtil = function() {
         function StringUtil() {}
-        StringUtil.camenize = function(str, isPlural) {
+        StringUtil.camenize = function(str) {
             str = str.trim().replace(/[\s|\_-]+/g, "_").replace(/[\_](\w)/g, function(m) {
                 return m[1].toUpperCase();
             });
-            if (isPlural) {
-                str = str.replace(/(.*)s$/, "$1");
-            }
             return str[0].toUpperCase() + str.slice(1, str.length);
+        };
+        StringUtil.singular = function(str) {
+            return str.replace(/(.*)s$/, "$1");
         };
         return StringUtil;
     }();

@@ -12,15 +12,16 @@ module util {
 
   export class StringUtil {
     // "foo" -> "Foo", "Foo -> Foo", "foo_bar" -> "FooBar", "foo bar" -> "FooBar"
-    static camenize(str: string, isPlural: boolean): string {
+    static camenize(str: string): string {
       str = str.trim().replace(/[\s|\_-]+/g, "_")
         .replace(/[\_](\w)/g, function(m){
           return m[1].toUpperCase();
         });
-      if (isPlural) {
-        str = str.replace(/(.*)s$/, "$1");
-      }
       return str[0].toUpperCase() + str.slice(1, str.length);
+    }
+
+    static singular(str: string): string {
+      return str.replace(/(.*)s$/, "$1");
     }
   }
 
