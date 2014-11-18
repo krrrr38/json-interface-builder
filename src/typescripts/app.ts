@@ -30,7 +30,7 @@ class TopCtrl {
       if (json) {
         try {
           var obj = JSON.parse(json);
-          return typeof(obj) === 'object';
+          return angular.isObject(obj) && !angular.isArray(obj);
         } catch(e) {
           return false;
         }

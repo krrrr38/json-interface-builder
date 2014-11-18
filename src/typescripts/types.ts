@@ -84,7 +84,7 @@ module types {
       this.value = value;
     }
     getPrettyJsonString(): string {
-      return "";
+      return "null";
     }
   }
 }

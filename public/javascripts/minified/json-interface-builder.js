@@ -11061,7 +11061,7 @@ var TopCtrl = function() {
             if (json) {
                 try {
                     var obj = JSON.parse(json);
-                    return typeof obj === "object";
+                    return angular.isObject(obj) && !angular.isArray(obj);
                 } catch (e) {
                     return false;
                 }
@@ -11358,7 +11358,7 @@ var types;
             this.value = value;
         }
         JIBAnything.prototype.getPrettyJsonString = function() {
-            return "";
+            return "null";
         };
         return JIBAnything;
     }();
