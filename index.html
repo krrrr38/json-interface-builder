@@ -9,7 +9,7 @@
     <header>
       <h1>JSON Interface Builder</h1>
       <div>
-        Generate Interfaces of JSON for TypeScript, Scala and so on.
+        Generate Interfaces of JSON for TypeScript, Scala, Go and so on.
       </div>
     </header>
     <div class="pure-g" ng-controller="TopCtrl">
@@ -70,6 +70,9 @@
               </label>
               <label class="pure-radio">
                 <input type="radio" ng-model="language" value="scala">Scala</input>
+              </label>
+              <label class="pure-radio">
+                <input type="radio" ng-model="language" value="go">Go</input>
               </label>
             </div>
             <textarea ng-model="result" class="result-preview">

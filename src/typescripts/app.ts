@@ -71,9 +71,14 @@ class TopCtrl {
   private loadResult = (lang: string) => {
     this.$scope.result = "";
     var exp;
-    if (lang === "scala") {
+    switch (lang) {
+    case "scala":
       exp = new exporter.ScalaExporter();
-    } else {
+      break;
+    case "go":
+      exp = new exporter.GoExporter();
+      break;
+    default:
       exp = new exporter.TypeScriptExporter();
     }
     var components = this.$scope.components;

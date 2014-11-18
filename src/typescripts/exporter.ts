@@ -25,7 +25,7 @@ module exporter {
       case types.Types.JIBArray:
         return this.toTSType((<types.JIBArray<any>> value).value) + "[]";
       case types.Types.JIBObject:
-        return (<types.JIBObject> value).name
+        return (<types.JIBObject> value).name;
       case types.Types.JIBString:
         return "string";
       case types.Types.JIBNumber:
@@ -57,7 +57,7 @@ module exporter {
       case types.Types.JIBArray:
         return "Seq[" + this.toScalaType((<types.JIBArray<any>> value).value) + "]";
       case types.Types.JIBObject:
-        return (<types.JIBObject> value).name
+        return (<types.JIBObject> value).name;
       case types.Types.JIBString:
         return "String";
       case types.Types.JIBNumber:
@@ -66,6 +66,39 @@ module exporter {
         return "Boolean";
       default:
         return "Any";
+      }
+    }
+  }
+
+  export class GoExporter implements Exporter {
+
+    constructor() {}
+
+    run(component: types.JIBObject): string {
+      var res = "type " + component.name + " struct {\n";
+      var values = component.value;
+      for(var key in values) {
+        var variable = util.StringUtil.camenize(key);
+        var annotation = "`json:\"" + key + ",omitempty\"`"
+        res += "\t" + variable + "\t" + this.toGoType(values[key]) + "\t" + annotation + "\n";
+      }
+      return res + "}\n";
+    }
+
+    private toGoType(value: types.JIBAny<any>): string {
+      switch(value.type) {
+      case types.Types.JIBArray:
+        return "[]" + this.toGoType((<types.JIBArray<any>> value).value);
+      case types.Types.JIBObject:
+        return (<types.JIBObject> value).name;
+      case types.Types.JIBString:
+        return "string";
+      case types.Types.JIBNumber:
+        return "int";
+      case types.Types.JIBBoolean:
+        return "bool";
+      default:
+        return "interface{}";
       }
     }
   }

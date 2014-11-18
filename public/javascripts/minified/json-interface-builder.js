@@ -11036,9 +11036,16 @@ var TopCtrl = function() {
         this.loadResult = function(lang) {
             _this.$scope.result = "";
             var exp;
-            if (lang === "scala") {
+            switch (lang) {
+              case "scala":
                 exp = new exporter.ScalaExporter();
-            } else {
+                break;
+
+              case "go":
+                exp = new exporter.GoExporter();
+                break;
+
+              default:
                 exp = new exporter.TypeScriptExporter();
             }
             var components = _this.$scope.components;
@@ -11230,6 +11237,42 @@ var exporter;
         return ScalaExporter;
     }();
     exporter.ScalaExporter = ScalaExporter;
+    var GoExporter = function() {
+        function GoExporter() {}
+        GoExporter.prototype.run = function(component) {
+            var res = "type " + component.name + " struct {\n";
+            var values = component.value;
+            for (var key in values) {
+                var variable = util.StringUtil.camenize(key);
+                var annotation = '`json:"' + key + ',omitempty"`';
+                res += "	" + variable + "	" + this.toGoType(values[key]) + "	" + annotation + "\n";
+            }
+            return res + "}\n";
+        };
+        GoExporter.prototype.toGoType = function(value) {
+            switch (value.type) {
+              case 0:
+                return "[]" + this.toGoType(value.value);
+
+              case 1:
+                return value.name;
+
+              case 2:
+                return "string";
+
+              case 3:
+                return "int";
+
+              case 4:
+                return "bool";
+
+              default:
+                return "interface{}";
+            }
+        };
+        return GoExporter;
+    }();
+    exporter.GoExporter = GoExporter;
 })(exporter || (exporter = {}));
 
 var types;
