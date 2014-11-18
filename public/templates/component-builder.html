@@ -1,8 +1,10 @@
-<div class="pure-form build-name-container">
-  <input type="text" ng-model="name"></input>
-  <span class="build-submit-container">
-    <input type="submit" value="Set" class="pure-button pure-button-primary" ng-click="setName()" ng-disabled="!name"></input>
-  </span>
+<div class="build-name-container">
+  <form class="pure-form">
+    <input type="text" ng-model="name"></input>
+    <span class="build-submit-container">
+      <input type="submit" value="Set" class="pure-button pure-button-primary" ng-click="setName()" ng-disabled="!name"></input>
+    </span>
+  </form>
 </div>
 <div class="pure-form build-preview-container">
   <h4>JSON Component</h4>
