@@ -12,7 +12,7 @@ interface TopScope extends ng.IScope {
   step: number;
   result: string;
   language: string;
-  components: core.SearchableObject[];
+  components: types.JIBObject[];
   targetComponentIndex: number;
   isValidJson: (string) => boolean;
   startBuilding: () => void;
@@ -60,11 +60,7 @@ class TopCtrl {
   }
 
   private build = (json: string) => {
-    var callback = (obj: core.SearchableObject) => {
-      this.$scope.components.push(obj);
-    };
-    var root = new core.SearchableObject("Root", false, JSON.parse(json), callback);
-    this.$scope.components.push(root);
+    this.$scope.components = core.JIBExplorer.findObjects(JSON.parse(json));
   }
 
   private showResult = () => {
@@ -89,7 +85,7 @@ class TopCtrl {
 
 interface ComponentBuilderScope extends ng.IScope {
   name: string;
-  component: core.SearchableObject;
+  component: types.JIBObject;
   submit: (string) => void;
   setName: () => void;
   prettyJson: string;

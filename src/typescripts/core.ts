@@ -1,67 +1,49 @@
 /// <reference path="../../typings/tsd.d.ts" />
 /// <reference path="./util.ts" />
+/// <reference path="./types.ts" />
 
 module core {
-  export interface Tree {
-    name: string;
-    isArray: boolean;
-  }
 
-  export class ConstValue implements Tree {
-    name: string;
-    isArray: boolean;
-    constructor(private value: any, isArray: boolean) {
-      this.isArray = isArray;
-      if (angular.isUndefined(value)) {
-        this.name = "any";
-      } else {
-        this.name = typeof value;
+  export class JIBExplorer {
+    static findObjects(obj: Object): types.JIBObject[] {
+      var objects: types.JIBObject[] = []
+      var callback = (jibobj: types.JIBObject) => {
+        objects.push(jibobj);
       }
+      JIBExplorer.dig("Root", obj, callback);
+      return objects;
     }
-  }
 
-  /**
-   * extend Object for labeling
-   */
-  export class SearchableObject implements Tree {
-    private trees: Object = {};
-    name: string;
-    isArray: boolean;
-    constructor(
-      name: string,
-      isArray: boolean,
-      private obj: Object,
-      callback: (SearchableObject) => void
-    ) {
-      this.name = name;
-      this.isArray = isArray;
-      for(var key in this.obj) {
-        var target = this.obj[key]
-        if (angular.isArray(target)) {
-          var head = target[0];
-          if (head && angular.isObject(head)) {
-            var searchableObj = new SearchableObject(util.StringUtil.camenize(key, true), true, head, callback);
-            this.trees[key] = searchableObj;
-            callback(searchableObj);
-          } else {
-            this.trees[key] = new ConstValue(head, true);
-          }
-        } else if (angular.isObject(target)) {
-          var searchableObj = new SearchableObject(util.StringUtil.camenize(key, false), false, this.obj[key], callback);
-          this.trees[key] = searchableObj;
-          callback(searchableObj);
+    private static dig(name: string, obj: Object, callback: (JIBObject) => void): types.JIBObject {
+      var values: Object = {};
+      for (var key in obj) {
+        var value = obj[key]
+        if (angular.isArray(value)) {
+          var head = value[0];
+          var singleKey = util.StringUtil.singular(key);
+          values[key] =
+            new types.JIBArray(JIBExplorer.detectSingleObject(singleKey, head, callback));
         } else {
-          this.trees[key] = new ConstValue(this.obj[key], false);
+          values[key] = JIBExplorer.detectSingleObject(key, value, callback);
         }
       }
+      var jibobj = new types.JIBObject(util.StringUtil.camenize(name), values);
+      callback(jibobj);
+      return jibobj;
     }
 
-    getPrettyJsonString(): string {
-      return util.JsonUtil.formatObject(this.obj);
-    }
-
-    getTrees(): Object {
-      return this.trees;
+    private static detectSingleObject(key: string, value: any, callback: (JIBObject) => void): types.JIBAny<any> {
+      if(angular.isObject(value)) {
+        return JIBExplorer.dig(key, value, callback);
+      } else if(angular.isString(value)) {
+        return new types.JIBString(value);
+      } else if(angular.isNumber(value)) {
+        return new types.JIBNumber(value);
+      } else if(typeof value === 'boolean') {
+        return new types.JIBBoolean(value);
+      } else {
+        return new types.JIBAnything(value);
+      }
     }
   }
 }
